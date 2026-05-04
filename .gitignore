@@ -1,0 +1,63 @@
+# ===============================
+# Maven
+# ===============================
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+
+# ===============================
+# Logs
+# ===============================
+*.log
+logs/
+
+# ===============================
+# Spring Boot
+# ===============================
+*.pid
+*.seed
+*.pid.lock
+
+# ===============================
+# OS files
+# ===============================
+.DS_Store
+Thumbs.db
+
+# ===============================
+# IDEs
+# ===============================
+.idea/
+*.iml
+.vscode/
+
+# ===============================
+# Environment / Secrets
+# ===============================
+.env
+.env.*
+application-local.yml
+application-dev.yml
+
+# ===============================
+# Docker
+# ===============================
+*.pid
+*.cid
+
+# ===============================
+# Node (future-proofing if UI added)
+# ===============================
+node_modules/
+dist/
+build/
+
+# ===============================
+# Misc
+# ===============================
+*.swp
+*.tmp
