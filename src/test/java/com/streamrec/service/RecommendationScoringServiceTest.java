@@ -53,7 +53,7 @@ class RecommendationScoringServiceTest {
         assertThat(savedScore.getLikeCount()).isZero();
         assertThat(savedScore.getSaveCount()).isZero();
         assertThat(savedScore.getSkipCount()).isZero();
-        verify(recommendationCacheService).cacheRecommendations("user_123", List.of());
+        verify(recommendationCacheService).cacheRecommendationsFromScores("user_123", List.of());
     }
 
     @Test
@@ -169,6 +169,6 @@ class RecommendationScoringServiceTest {
         assertThat(existingScore.getSaveCount()).isEqualTo(1);
         assertThat(existingScore.getSkipCount()).isZero();
         verify(userTrackScoreRepository).save(existingScore);
-        verify(recommendationCacheService).cacheRecommendations("user_123", topRecommendations);
+        verify(recommendationCacheService).cacheRecommendationsFromScores("user_123", topRecommendations);
     }
 }
