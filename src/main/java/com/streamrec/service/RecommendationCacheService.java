@@ -2,11 +2,13 @@ package com.streamrec.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.streamrec.dto.RecommendationItem;
 import com.streamrec.entity.UserTrackScore;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,7 +34,46 @@ public class RecommendationCacheService {
         this.recommendationTtl = recommendationTtl;
     }
 
-    public void cacheRecommendations(String userId, List<UserTrackScore> userTrackScores) {
+    public Optional<CachedRecommendations> getRecommendations(String userId) {
+        String serializedPayload = stringRedisTemplate.opsForValue().get(buildRecommendationKey(userId));
+        if (serializedPayload == null) {
+            return Optional.empty();
+        }
+
+        try {
+            RecommendationCachePayload payload = objectMapper.readValue(serializedPayload, RecommendationCachePayload.class);
+            List<RecommendationItem> items = payload.recommendations().stream()
+                    .map(item -> new RecommendationItem(
+                            item.trackId(),
+                            item.title(),
+                            item.artist(),
+                            item.genre(),
+                            item.score(),
+                            item.reason()
+                    ))
+                    .toList();
+            return Optional.of(new CachedRecommendations(payload.generatedAt(), items));
+        } catch (JsonProcessingException exception) {
+            throw new IllegalStateException("Failed to deserialize recommendation cache payload for userId=" + userId, exception);
+        }
+    }
+
+    public void cacheRecommendations(String userId, List<RecommendationItem> items) {
+        RecommendationCachePayload payload = new RecommendationCachePayload(userId, Instant.now(), items.stream()
+                .map(item -> new RecommendationCacheItem(
+                        item.trackId(),
+                        item.title(),
+                        item.artist(),
+                        item.genre(),
+                        item.score(),
+                        item.reason()
+                ))
+                .toList());
+
+        writeRecommendations(userId, payload);
+    }
+
+    public void cacheRecommendationsFromScores(String userId, List<UserTrackScore> userTrackScores) {
         RecommendationCachePayload payload = new RecommendationCachePayload(
                 userId,
                 Instant.now(),
@@ -41,6 +82,10 @@ public class RecommendationCacheService {
                         .toList()
         );
 
+        writeRecommendations(userId, payload);
+    }
+
+    private void writeRecommendations(String userId, RecommendationCachePayload payload) {
         try {
             String key = buildRecommendationKey(userId);
             String serializedPayload = objectMapper.writeValueAsString(payload);
@@ -61,7 +106,7 @@ public class RecommendationCacheService {
                 "Unknown Track",
                 "Unknown Artist",
                 "Unknown Genre",
-                userTrackScore.getScore(),
+                userTrackScore.getScore().max(BigDecimal.ZERO),
                 buildReason(userTrackScore)
         );
     }
@@ -86,6 +131,12 @@ public class RecommendationCacheService {
             String userId,
             Instant generatedAt,
             List<RecommendationCacheItem> recommendations
+    ) {
+    }
+
+    public record CachedRecommendations(
+            Instant generatedAt,
+            List<RecommendationItem> recommendations
     ) {
     }
 

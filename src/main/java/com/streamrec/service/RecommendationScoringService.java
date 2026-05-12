@@ -39,7 +39,7 @@ public class RecommendationScoringService {
 
         UserTrackScore savedUserTrackScore = userTrackScoreRepository.save(userTrackScore);
         List<UserTrackScore> topRecommendations = userTrackScoreRepository.findTop10ByUserIdOrderByScoreDesc(event.userId());
-        recommendationCacheService.cacheRecommendations(event.userId(), topRecommendations);
+        recommendationCacheService.cacheRecommendationsFromScores(event.userId(), topRecommendations);
 
         log.info(
                 "Processed recommendation score update. userId={}, trackId={}, eventType={}, score={}, playCount={}, likeCount={}, saveCount={}, skipCount={}",
