@@ -39,3 +39,7 @@ management:
   endpoint:
     health:
       show-details: always
+
+streamrec:
+  cache:
+    recommendation-ttl: PT1H
